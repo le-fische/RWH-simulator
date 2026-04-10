@@ -1,0 +1,11 @@
+{
+  "name": "rwh-simulator",
+  "version": "1.0.0",
+  "description": "Rainwater Harvesting System 3D Simulator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {}
+}

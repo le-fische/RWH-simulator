@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RWH System 3D Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="panel left-panel">
+            <div class="panel-header">
+                <h1>System Configuration</h1>
+                <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">🌙</button>
+            </div>
+
+            <div class="panel-content">
+                
+                <div style="background: rgba(0, 102, 204, 0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--accent); margin-bottom: 15px;">
+                    <h3 style="margin-bottom: 15px; font-size: 14px; color: var(--accent); display: flex; align-items: center; gap: 6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Data Status
+                    </h3>
+                    <div class="control-group">
+                        <label>Terrain CSV</label>
+                        <div id="terrainFileList" class="file-list-text" style="font-style: italic; color: var(--text-muted);">Loading...</div>
+                    </div>
+                    <div class="control-group" style="margin-bottom: 0;">
+                        <label>Rain Data CSV(s)</label>
+                        <div id="rainFileList" class="file-list-text" style="font-style: italic; color: var(--text-muted);">Loading...</div>
+                    </div>
+                    <details style="margin-top: 12px;">
+                        <summary style="cursor: pointer; font-size: 12px; color: var(--text-muted);">Override with custom files</summary>
+                        <div style="margin-top: 10px;">
+                            <div class="control-group">
+                                <div class="custom-file-wrapper">
+                                    <input type="file" id="terrainUpload" class="hidden-file-input" accept=".csv">
+                                    <label for="terrainUpload" class="btn btn-secondary full-width-btn">Browse Terrain Data</label>
+                                </div>
+                            </div>
+                            <div class="control-group" style="margin-bottom: 0;">
+                                <div class="custom-file-wrapper">
+                                    <input type="file" id="rainUpload" class="hidden-file-input" accept=".csv" multiple>
+                                    <label for="rainUpload" class="btn btn-secondary full-width-btn">Browse Rain Data</label>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+
+                <details class="hardware-section" open>
+                    <summary>⚙️ Simulation Setup</summary>
+                    <div class="control-group">
+                        <label for="rainMode">Rain Data Processing</label>
+                        <select id="rainMode" class="select-input">
+                            <option value="repeat" selected>Repeat Single Year</option>
+                            <option value="sequential">4-Year Sequential</option>
+                            <option value="average">Averaged (All Years)</option>
+                        </select>
+                    </div>
+                    <div class="control-group" id="baseYearContainer">
+                        <label for="baseYear">Select Year to Repeat</label>
+                        <select id="baseYear" class="select-input">
+                            <option value="2013">2013 Data</option>
+                            <option value="2014">2014 Data</option>
+                            <option value="2015" selected>2015 Data (Avg)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="simDuration">Simulation Duration</label>
+                        <select id="simDuration" class="select-input">
+                            <option value="1">1 Year Setup</option>
+                            <option value="4">4 Year Setup</option>
+                            <option value="5" selected>5 Year Setup</option>
+                        </select>
+                    </div>
+                    
+                    <div style="height: 1px; background: var(--border); margin: 15px 0;"></div>
+                    <label style="font-size: 11px; color: var(--text-main); font-weight: 600; margin-bottom:10px;">Adjust Score Weightings <span class="tooltip" title="Values auto-normalize to 100%. Adjust based on stakeholder priorities.">?</span></label>
+                    <div class="control-group">
+                        <label for="w_consumption">Consumption</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_consumption" class="slider" min="0" max="100" value="20">
+                            <input type="number" id="w_consumptionInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_cost">Cost</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_cost" class="slider" min="0" max="100" value="20">
+                            <input type="number" id="w_costInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_risk">Risk Mitigation</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_risk" class="slider" min="0" max="100" value="12">
+                            <input type="number" id="w_riskInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_ghg">GHG Emissions</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_ghg" class="slider" min="0" max="100" value="12">
+                            <input type="number" id="w_ghgInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_maintenance">Maintenance</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_maintenance" class="slider" min="0" max="100" value="12">
+                            <input type="number" id="w_maintenanceInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_reliability">Reliability</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_reliability" class="slider" min="0" max="100" value="10">
+                            <input type="number" id="w_reliabilityInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_nonPotable">Non-Potable Supply</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_nonPotable" class="slider" min="0" max="100" value="7">
+                            <input type="number" id="w_nonPotableInput" class="value-input">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="w_flowRate">Flow Rate</label>
+                        <div class="slider-container">
+                            <input type="range" id="w_flowRate" class="slider" min="0" max="100" value="7">
+                            <input type="number" id="w_flowRateInput" class="value-input">
+                        </div>
+                    </div>
+                </details>
+
+                <details class="hardware-section section-water">
+                    <summary>💧 Tanks & Catchment</summary>
+                    <div class="control-group">
+                        <label for="consumption">Consumption Target <span class="tooltip" title="The promised volume of water (L/day) delivered to the house.">?</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="consumption" class="slider" min="125" max="745" value="450" step="5">
+                            <input type="number" id="consumptionInput" class="value-input" min="125" max="745" value="450">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="roofCatchment">Roof Catchment</label>
+                        <select id="roofCatchment" class="select-input">
+                            <option value="0">None (0 m²)</option>
+                            <option value="50">Half Roof (50 m², $150)</option>
+                            <option value="100" selected>Full Roof (100 m², $350)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="addCatch">Additional Catchment Area (m²)</label>
+                        <div class="slider-container">
+                            <input type="range" id="addCatch" class="slider" min="0" max="500" value="0" step="10">
+                            <input type="number" id="addCatchInput" class="value-input" min="0" max="500" value="0">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="catchX">Catchment Location Y (m)</label>
+                        <div class="slider-container">
+                            <input type="range" id="catchX" class="slider" min="-20" max="100" value="60" step="1">
+                            <input type="number" id="catchXInput" class="value-input" min="-20" max="100" value="60">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="catchY">Catchment Location X (m)</label>
+                        <div class="slider-container">
+                            <input type="range" id="catchY" class="slider" min="-20" max="100" value="60" step="1">
+                            <input type="number" id="catchYInput" class="value-input" min="-20" max="100" value="60">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="catchTank">Catchment Tank Volume (L)</label>
+                        <select id="catchTank" class="select-input">
+                            <option value="400">400 L</option>
+                            <option value="1500" selected>1500 L</option>
+                            <option value="2500">2500 L</option>
+                            <option value="5000">5000 L</option>
+                            <option value="10000">10000 L</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="tankVol">Storage Tank Volume (m³)</label>
+                        <select id="tankVol" class="select-input">
+                            <option value="1">1 m³</option>
+                            <option value="2">2 m³</option>
+                            <option value="3">3 m³</option>
+                            <option value="5" selected>5 m³</option>
+                            <option value="8">8 m³</option>
+                            <option value="10">10 m³</option>
+                            <option value="15">15 m³</option>
+                            <option value="20">20 m³</option>
+                            <option value="25">25 m³</option>
+                            <option value="30">30 m³</option>
+                            <option value="40">40 m³</option>
+                            <option value="50">50 m³</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="tankX">Tank Location Y (m)</label>
+                        <div class="slider-container">
+                            <input type="range" id="tankX" class="slider" min="-20" max="100" value="40" step="1">
+                            <input type="number" id="tankXInput" class="value-input" min="-20" max="100" value="40">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="tankY">Tank Location X (m)</label>
+                        <div class="slider-container">
+                            <input type="range" id="tankY" class="slider" min="-20" max="100" value="40" step="1">
+                            <input type="number" id="tankYInput" class="value-input" min="-20" max="100" value="40">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="towerH">Tower Height (m) <span class="tooltip" title="Increases gravity flow rate to the house, but requires more energy to pump.">?</span></label>
+                        <select id="towerH" class="select-input">
+                            <option value="0">0 m</option>
+                            <option value="2">2 m</option>
+                            <option value="3">3 m</option>
+                            <option value="4">4 m</option>
+                            <option value="5" selected>5 m</option>
+                            <option value="6">6 m</option>
+                            <option value="8">8 m</option>
+                            <option value="10">10 m</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="pump">Pump Model</label>
+                        <select id="pump" class="select-input">
+                            <option value="A">Pump A (Small)</option>
+                            <option value="B" selected>Pump B (Medium)</option>
+                            <option value="C">Pump C (Large)</option>
+                        </select>
+                    </div>
+                </details>
+
+                <details class="hardware-section section-treatment">
+                    <summary>🌿 Treatment & Filtration</summary>
+                    <div class="control-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="filter5um" class="checkbox-input">
+                            <span>5µm Pre-Filter ($110)</span>
+                            <span class="tooltip" title="Increases friction losses but dramatically extends 1µm filter life.">?</span>
+                        </label>
+                    </div>
+                    <div class="control-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="filter200um" class="checkbox-input">
+                            <span>200µm Pre-Filter ($100)</span>
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label for="filterLocation">Filter Location</label>
+                        <select id="filterLocation" class="select-input">
+                            <option value="storage" selected>Storage Line (Requires more pumping energy)</option>
+                            <option value="house">House Line (Reduces final flow rate)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="uv">UV System <span class="tooltip" title="Bottlenecks max flow rate. Runs 24/7 causing a constant energy drain.">?</span></label>
+                        <select id="uv" class="select-input">
+                            <option value="36">36W ($500, 25 LPM)</option>
+                            <option value="40" selected>40W ($600, 35 LPM)</option>
+                            <option value="50">50W ($850, 40 LPM)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="chem">Chemical Treatment</label>
+                        <select id="chem" class="select-input">
+                            <option value="chlorine" selected>Chlorine ($700)</option>
+                            <option value="ozone">Ozone ($4,000)</option>
+                        </select>
+                    </div>
+                    <div class="control-group checkbox-group" style="margin-top: 15px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="npws" class="checkbox-input">
+                            <span>Enable Non-Potable (NP) Supply</span>
+                            <span class="tooltip" title="Allows raw water use for toilets/gardens, saving filter life but adds a $250 sensor cost.">?</span>
+                        </label>
+                    </div>
+                    <div id="npControls" class="np-controls hidden">
+                        <div class="control-group">
+                            <label for="npFraction">NP Fraction of Total</label>
+                            <div class="slider-container">
+                                <input type="range" id="npFraction" class="slider" min="0" max="0.3" value="0.15" step="0.01">
+                                <input type="number" id="npFractionInput" class="value-input" min="0" max="0.3" value="0.15" step="0.01">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="npThreshold">Minimum Storage Reserve (L)</label>
+                            <input type="number" id="npThreshold" class="number-input" value="500" min="0" step="100">
+                        </div>
+                    </div>
+                </details>
+
+                <details class="hardware-section section-power">
+                    <summary>⚡ Power System</summary>
+                    <div class="control-group">
+                        <label for="power">Power Source</label>
+                        <select id="power" class="select-input">
+                            <option value="solar" selected>Solar</option>
+                            <option value="diesel">Diesel Generator</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="battQty">Battery Bank Quantity</label>
+                        <div class="slider-container">
+                            <input type="range" id="battQty" class="slider" min="1" max="10" value="2" step="1">
+                            <input type="number" id="battQtyInput" class="value-input" min="1" max="10" value="2">
+                        </div>
+                    </div>
+                    <div id="solarControls" class="solar-controls">
+                        <div class="control-group">
+                            <label for="solarModel">Solar Panel Model</label>
+                            <select id="solarModel" class="select-input">
+                                <option value="HES-260">HES-260 (1.6m², 17%, $550)</option>
+                                <option value="SW-80">SW-80 (0.62m², 15%, $205)</option>
+                                <option value="HES-305P" selected>HES-305P (2m², 16%, $450)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="panelQty">Panel Quantity</label>
+                            <div class="slider-container">
+                                <input type="range" id="panelQty" class="slider" min="1" max="20" value="4" step="1">
+                                <input type="number" id="panelQtyInput" class="value-input" min="1" max="20" value="4">
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+        </div>
+
+        <div class="panel center-panel">
+            <div id="viewport" class="viewport"></div>
+            <div class="viewport-info">
+                <span id="systemStatus" class="status-text">Ready</span>
+            </div>
+        </div>
+
+        <div class="panel right-panel">
+            <div class="panel-header">
+                <h2>Simulation Results</h2>
+            </div>
+            
+            <div class="panel-content results-container">
+                <div id="emptyState" class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <h3>Loading Data...</h3>
+                    <p>Terrain and rainfall data is being loaded from the server.</p>
+                </div>
+
+                <div id="resultsContent" class="results-content hidden">
+                    <div class="satisfaction-section">
+                        <div class="overall-score" id="overallScore">
+                            <div class="score-value" id="scoreValue">--</div>
+                            <div class="score-label">Overall Weighted Score</div>
+                        </div>
+                    </div>
+
+                    <div class="tank-level-section" style="border-bottom: none; padding-bottom: 0;">
+                        <h3>System Balance Profile</h3>
+                        <div style="height: 200px; width: 100%; margin: 10px 0;">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="scores-section">
+                        <h3>Satisfaction Breakdown</h3>
+                        <div class="score-bars" id="scoreBars"></div>
+                    </div>
+
+                    <div class="metrics-section">
+                        <h3>Key Metrics</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-item"><div class="metric-label">Total Cost</div><div class="metric-value" id="metricCost">--</div></div>
+                            <div class="metric-item"><div class="metric-label">GHG Emissions</div><div class="metric-value" id="metricGHG">--</div></div>
+                            <div class="metric-item"><div class="metric-label">Risk Exposure</div><div class="metric-value" id="metricRisk">--</div></div>
+                            <div class="metric-item"><div class="metric-label">Avg Cons.</div><div class="metric-value" id="metricConsumption">--</div></div>
+                            <div class="metric-item"><div class="metric-label">Flow Rate</div><div class="metric-value" id="metricFlow">--</div></div>
+                            <div class="metric-item"><div class="metric-label">Reliability</div><div class="metric-value" id="metricReliability">--</div></div>
+                        </div>
+                    </div>
+
+                    <div class="button-group" style="display: flex; gap: 8px; flex-direction: column;">
+                        <button class="btn btn-secondary" id="viewMatrixBtn" style="display:none; width: 100%;">View Data & Telemetry</button>
+                        <button class="btn btn-primary" id="exportDataBtn" style="display:none; width: 100%;">Export PDF Blueprint</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Welcome to RWH Simulator</h2>
+                <button class="modal-close" id="closeWelcomeIcon">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 14px; margin-bottom: 15px;">Your rainwater harvesting system data is pre-loaded and ready to go:</p>
+                <ol style="margin-left: 20px; margin-bottom: 25px; line-height: 1.8; font-size: 14px;">
+                    <li><strong>Data Pre-Loaded:</strong> Terrain and rainfall data (2013-2015) is loaded automatically.</li>
+                    <li><strong>Tweak Settings:</strong> Adjust your target consumption and score weightings to match your design goals.</li>
+                    <li><strong>Choose Components:</strong> Expand the colored hardware sections to configure your system.</li>
+                </ol>
+                <div style="text-align: right;">
+                    <button class="btn btn-primary" id="startSimBtn">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="matrixModal" class="modal hidden">
+        <div class="modal-content" style="width: 900px; max-width: 95%;">
+            <div class="modal-header">
+                <h2>Detailed Data Matrix & Telemetry</h2>
+                <button class="modal-close" id="closeMatrixBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="height: 300px; width: 100%; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                    <h3 style="color:var(--accent); font-size:15px; margin-bottom: 10px;">Simulation Telemetry Overview</h3>
+                    <canvas id="comprehensiveChart"></canvas>
+                </div>
+                
+                <div id="matrixBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="simulation.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
